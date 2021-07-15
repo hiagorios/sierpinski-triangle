@@ -40,6 +40,7 @@
 
 # ==================================
 # Running on Elixir 1.9.1
+# https://www.jdoodle.com/execute-elixir-online/
 
 defmodule Triangle do 
     # Struct
