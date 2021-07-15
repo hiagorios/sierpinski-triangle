@@ -1,6 +1,6 @@
 # If-else
 # if condition do
-#   #code 
+#   #code
 # else
 #     #code
 # end
@@ -8,7 +8,7 @@
 # Functions:  Named functions are always defined in modules
 # defmodule modulename do
 #     def function_name(parameter1, parameter2) do
-#         #code 
+#         #code
 #     end
 # end
 
@@ -42,36 +42,40 @@
 # Running on Elixir 1.9.1
 # https://www.jdoodle.com/execute-elixir-online/
 
-defmodule Triangle do 
-    # Struct
-    defstruct top_left: 0, top_right: 0, bottom: 0 
+defmodule Triangle do
+  # Struct
+  defstruct top_left: 0, top_right: 0, bottom: 0
 end
 
 defmodule SierpinskiTriangle do
+  use Application
+  # Constants (not really)
+  @columns 63
+  @rows 32
+  @filled_char "O"
+  @empty_char "-"
 
-    # Constants (not really)
-    @columns 63
-    @rows 32
-    @filled_char "O"
-    @empty_char "-"
+  @impl true
+  def start(_type, _args) do
+    # Although we don't use the supervisor name below directly,
+    # it can be useful when debugging or introspecting the system.
+    IO.puts("Welcome to the Sierpinski Triangle Generator!")
 
-    def generate(0, state) do
-        IO.puts "end"
-    end
-    
-    def generate(n, state) do
-        IO.puts "#{n}"
-        t = %Triangle{top_left: 2}
-        IO.puts "#{t.top_left} #{t.top_right} #{t.bottom}"
-        generate n-1, state
-    end
+    # Parse the input string as Integer. n contains what could be parsed. _ is the rest
+    {n, _} = IO.gets("Please enter the number of iterations: ") |> Integer.parse()
 
+    # Main call
+    SierpinskiTriangle.generate(n, :test)
+  end
+
+  def generate(0, state) do
+    IO.puts("end")
+  end
+
+  def generate(n, state) do
+    IO.puts("#{n}")
+    t = %Triangle{top_left: 2}
+    IO.puts("#{t.top_left} #{t.top_right} #{t.bottom}")
+    generate(n - 1, state)
+  end
 end
-
-IO.puts "Welcome to the Sierpinski Triangle Generator!"
-
-# Parse the input string as Integer. n contains what could be parsed. _ is the rest
-{n, _} = IO.gets("Please enter the number of iterations: ") |> Integer.parse
-
-# Main call
-SierpinskiTriangle.generate(n, :test)
