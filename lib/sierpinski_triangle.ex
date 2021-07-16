@@ -44,7 +44,7 @@
 
 defmodule Triangle do
   # Struct
-  defstruct top_left: 0, top_right: 0, bottom: 0
+  defstruct left_col: 0, right_col: 62, top_row: 0, height: 32
 end
 
 defmodule SierpinskiTriangle do
@@ -57,15 +57,51 @@ defmodule SierpinskiTriangle do
 
   @impl true
   def start(_type, _args) do
-    # Although we don't use the supervisor name below directly,
-    # it can be useful when debugging or introspecting the system.
-    IO.puts("Welcome to the Sierpinski Triangle Generator!")
-
-    # Parse the input string as Integer. n contains what could be parsed. _ is the rest
-    {n, _} = IO.gets("Please enter the number of iterations: ") |> Integer.parse()
-
     # Main call
-    SierpinskiTriangle.generate(n, :test)
+    # triangles =
+    SierpinskiTriangle.generate(1, :test)
+  end
+
+  def split_triangle(0, triangle, image) do
+    half_trg_wd = (triangle.right_col - triangle.left_col) / 2
+
+    new_image =
+      for y <- triangle.top..(triangle.top + triangle.height) do
+        for x <- triangle.left_col..triangle.right_col do
+          if half_trg_wd - y <= x and x <= half_trg_wd + y do
+            List.replace_at([], y * half_trg_wd * 2 + x, @filled_char)
+          end
+        end
+      end
+  end
+
+  def split_triangle(n, triangle, image) do
+    width = triangle.right_col - triangle.left_col
+
+    top = %Triangle{
+      top_row: triangle.top,
+      left_col: 1 / 4 * width,
+      right_col: 3 / 4 * width,
+      height: triangle.height / 2
+    }
+
+    left = %Triangle{
+      top_row: top.left_col,
+      left_col: triangle.left_col,
+      right_col: width / 2,
+      height: triangle.height / 2
+    }
+
+    right = %Triangle{
+      top_row: top.right_col,
+      left_col: left.right_col,
+      right_col: triangle.right_col,
+      height: triangle.height / 2
+    }
+
+    image = split_triangle(n - 1, top, image)
+    image = split_triangle(n - 1, left, image)
+    split_triangle(n - 1, right, image)
   end
 
   def generate(0, state) do
@@ -73,9 +109,6 @@ defmodule SierpinskiTriangle do
   end
 
   def generate(n, state) do
-    IO.puts("#{n}")
-    t = %Triangle{top_left: 2}
-    IO.puts("#{t.top_left} #{t.top_right} #{t.bottom}")
-    generate(n - 1, state)
+    [head | tail] = generate(n - 1, state)
   end
 end
