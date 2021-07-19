@@ -44,7 +44,7 @@
 
 defmodule Triangle do
   # Struct
-  defstruct left_col: 0, right_col: 62, top_row: 0, height: 32
+  defstruct top_row: 0, top_col: 31, height: 32, width: 63
 end
 
 defmodule SierpinskiTriangle do
@@ -59,8 +59,10 @@ defmodule SierpinskiTriangle do
   def start(_type, _args) do
     # Main call
     n = 1
-    empty_image = List.duplicate(@empty_char, @columns * @rows)
-    image = SierpinskiTriangle.split_triangle(n, %Triangle{}, empty_image)
+    IO.puts("Doing #{n} iterations")
+    empty_image = List.duplicate(@empty_char, @columns)
+    new_empty = List.duplicate(empty_image, @rows)
+    image = SierpinskiTriangle.split_triangle(n, %Triangle{}, new_empty)
     SierpinskiTriangle.print(image)
   end
 
@@ -68,34 +70,37 @@ defmodule SierpinskiTriangle do
     case 0 do
       ^n ->
         # base case
-        half_trg_wd = (triangle.right_col - triangle.left_col) / 2
         y = triangle.top_row
-        y_final = triangle.top_row + triangle.height
-        tint_image(image, y, y_final, half_trg_wd)
+        y_final = triangle.top_row + triangle.height - 1
+        final_image = tint_image(image, 0, y, y_final, triangle.top_col)
+        # _ = IO.puts("\n\n")
+        # _ = print(final_image)
+        final_image
 
       _ ->
         # general case
-        width = triangle.right_col - triangle.left_col
+        new_height = (triangle.height / 2) |> floor
+        new_width = (triangle.width / 2) |> floor
 
         top = %Triangle{
           top_row: triangle.top_row,
-          left_col: 1 / 4 * width,
-          right_col: 3 / 4 * width,
-          height: triangle.height / 2
+          top_col: triangle.top_col,
+          height: new_height,
+          width: new_width
         }
 
         left = %Triangle{
-          top_row: top.left_col,
-          left_col: triangle.left_col,
-          right_col: width / 2,
-          height: triangle.height / 2
+          top_row: (1 / 2 * triangle.height) |> floor,
+          top_col: (1 / 4 * triangle.width) |> floor,
+          height: new_height,
+          width: new_width
         }
 
         right = %Triangle{
-          top_row: top.right_col,
-          left_col: left.right_col,
-          right_col: triangle.right_col,
-          height: triangle.height / 2
+          top_row: left.top_row,
+          top_col: (3 / 4 * triangle.width) |> floor,
+          height: new_height,
+          width: new_width
         }
 
         image_modified = split_triangle(n - 1, top, image)
@@ -104,38 +109,40 @@ defmodule SierpinskiTriangle do
     end
   end
 
-  def tint_image(image, y, y_final, half_trg_wd) do
-    x = half_trg_wd - y
-    x_final = half_trg_wd + y
-    offset = y * half_trg_wd * 2
-    image_modified = tint_line(image, offset, x, x_final)
+  def tint_image(image, idx, y, y_final, start_at) do
+    x = start_at - idx
+    x_final = start_at + idx
+    new_image = Enum.at(image, y)
+    image_modified = List.replace_at(image, y, tint_line(new_image, x, x_final))
 
     case y do
       ^y_final ->
         image_modified
 
       _ ->
-        tint_image(image_modified, y + 1, y_final, half_trg_wd)
+        tint_image(image_modified, idx + 1, y + 1, y_final, start_at)
     end
   end
 
-  def tint_line(image, offset, x, x_final) do
-    image_modified = List.replace_at(image, offset + x, @filled_char)
+  def tint_line(image, x, x_final) do
+    image_modified = List.replace_at(image, x, @filled_char)
 
     case x do
-      x_final ->
+      ^x_final ->
         image_modified
 
       _ ->
-        tint_line(image_modified, offset, x + 1, x_final)
+        tint_line(image_modified, x + 1, x_final)
     end
   end
 
   def print(image) do
-    for y <- 0..@rows do
-      for x <- 0..@columns do
-        IO.write(Enum.at(image, y * @columns + x))
-      end
-    end
+    Enum.each(image, fn y ->
+      Enum.each(y, fn x ->
+        IO.write(x)
+      end)
+
+      IO.write("\n")
+    end)
   end
 end
