@@ -44,7 +44,7 @@
 
 defmodule Triangle do
   # Struct
-  defstruct top_row: 0, top_col: 31, height: 32, width: 63
+  defstruct top_row_idx: 0, top_col_idx: 31, height: 32, width: 63
 end
 
 defmodule SierpinskiTriangle do
@@ -58,69 +58,74 @@ defmodule SierpinskiTriangle do
   @impl true
   def start(_type, _args) do
     # Main call
-    n = 1
+    n = 3
     IO.puts("Doing #{n} iterations")
-    empty_image = List.duplicate(@empty_char, @columns)
-    new_empty = List.duplicate(empty_image, @rows)
-    image = SierpinskiTriangle.split_triangle(n, %Triangle{}, new_empty)
+    empty_line = List.duplicate(@empty_char, @columns)
+    empty_image = List.duplicate(empty_line, @rows)
+    image = SierpinskiTriangle.split_triangle(n, %Triangle{}, empty_image)
     SierpinskiTriangle.print(image)
+
+    # Precisa para não dar erro
+    Supervisor.start_link([], strategy: :one_for_one, name: A.Supervisor)
   end
 
   def split_triangle(n, triangle, image) do
     case 0 do
       ^n ->
         # base case
-        y = triangle.top_row
-        y_final = triangle.top_row + triangle.height - 1
-        final_image = tint_image(image, 0, y, y_final, triangle.top_col)
-        # _ = IO.puts("\n\n")
-        # _ = print(final_image)
-        final_image
+        y = triangle.top_row_idx
+        y_final = triangle.top_row_idx + triangle.height - 1
+        tint_image(image, 0, y, y_final, triangle.top_col_idx)
 
       _ ->
         # general case
-        new_height = (triangle.height / 2) |> floor
-        new_width = (triangle.width / 2) |> floor
+        child_height = (triangle.height / 2) |> floor
+        child_width = (triangle.width / 2) |> floor
 
         top = %Triangle{
-          top_row: triangle.top_row,
-          top_col: triangle.top_col,
-          height: new_height,
-          width: new_width
+          top_row_idx: triangle.top_row_idx,
+          top_col_idx: triangle.top_col_idx,
+          height: child_height,
+          width: child_width
         }
 
         left = %Triangle{
-          top_row: (1 / 2 * triangle.height) |> floor,
-          top_col: (1 / 4 * triangle.width) |> floor,
-          height: new_height,
-          width: new_width
+          # Using parent top row/col index as offset of new row/col
+          top_row_idx: ((1 / 2 * triangle.height) |> floor) + triangle.top_row_idx,
+          top_col_idx: top.top_col_idx - ((1 / 4 * triangle.width) |> floor) - 1,
+          height: child_height,
+          width: child_width
         }
 
         right = %Triangle{
-          top_row: left.top_row,
-          top_col: (3 / 4 * triangle.width) |> floor,
-          height: new_height,
-          width: new_width
+          # Using parent top row/col index as offset of new row/col
+          top_row_idx: left.top_row_idx,
+          top_col_idx: ((1 / 4 * triangle.width) |> floor) + top.top_col_idx + 1,
+          height: child_height,
+          width: child_width
         }
 
         image_modified = split_triangle(n - 1, top, image)
-        image_modified_again = split_triangle(n - 1, left, image_modified)
-        split_triangle(n - 1, right, image_modified_again)
+        image_modified = split_triangle(n - 1, left, image_modified)
+        split_triangle(n - 1, right, image_modified)
     end
   end
 
-  def tint_image(image, idx, y, y_final, start_at) do
-    x = start_at - idx
-    x_final = start_at + idx
-    new_image = Enum.at(image, y)
-    image_modified = List.replace_at(image, y, tint_line(new_image, x, x_final))
+  # Start from top of row and middle of col and work the way down increasing the lateral range by 1
+  def tint_image(image, offset_idx, y, y_final, start_index) do
+    x = start_index - offset_idx
+    x_final = start_index + offset_idx
+    line_at_y = Enum.at(image, y)
+    new_image = List.replace_at(image, y, tint_line(line_at_y, x, x_final))
 
     case y do
+      # base case
       ^y_final ->
-        image_modified
+        new_image
 
       _ ->
-        tint_image(image_modified, idx + 1, y + 1, y_final, start_at)
+        # general case
+        tint_image(new_image, offset_idx + 1, y + 1, y_final, start_index)
     end
   end
 
@@ -128,10 +133,12 @@ defmodule SierpinskiTriangle do
     image_modified = List.replace_at(image, x, @filled_char)
 
     case x do
+      # base image
       ^x_final ->
         image_modified
 
       _ ->
+        # general case
         tint_line(image_modified, x + 1, x_final)
     end
   end
