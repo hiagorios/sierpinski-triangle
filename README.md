@@ -1,21 +1,11 @@
 # SierpinskiTriangle
 
-**TODO: Add description**
+[Sierpiński triangle](https://www.wikiwand.com/en/Sierpi%C5%84ski_triangle) generator in elixir
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `sier_triangle` to your list of dependencies in `mix.exs`:
+Install the [elixir compiler](https://elixir-lang.org/install.html)
 
-```elixir
-def deps do
-  [
-    {:sier_triangle, "~> 0.1.0"}
-  ]
-end
-```
+## Running
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/sier_triangle](https://hexdocs.pm/sier_triangle).
-
+Run `mix run`
